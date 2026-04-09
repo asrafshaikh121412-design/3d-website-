@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON-STORE | 3D Experience</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Syncopate:wght@400;700&display=swap');
+        
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        canvas { position: fixed; top: 0; left: 0; z-index: 1; }
+
+        /* --- GOOGLE NEWS STYLE NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #000;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            overflow-x: auto;
+            white-space: nowrap;
+            display: flex;
+            gap: 20px;
+            padding-left: 20px;
+        }
+
+        nav a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        nav a.active {
+            background: #004a77; /* Deep blue highlight like your image */
+            color: #82ccff;
+        }
+
+        nav a:hover { color: white; }
+
+        /* --- CONTENT STYLING --- */
+        section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .content {
+            max-width: 450px;
+            pointer-events: all;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 { font-family: 'Syncopate', sans-serif; font-size: 2rem; color: #00f2ff; margin: 0; }
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            border: 2px solid #00f2ff;
+            color: #00f2ff;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#p1" class="active">Headlines</a>
+        <a href="#p2">Footwear</a>
+        <a href="#p3">Apparel</a>
+        <a href="#p4">Full Look</a>
+        <a href="#">Business</a>
+    </nav>
+
+    <section id="p1">
+        <div class="content">
+            <h1>NEON HEADLINES</h1>
+            <p>The latest in cyber-fashion technology has arrived. Scroll to explore the drop.</p>
+        </div>
+    </section>
+
+    <section id="p2">
+        <div class="content">
+            <h1>01. ALPHA SNEAKER</h1>
+            <p>Extreme comfort meets high-speed aesthetics.</p>
+        </div>
+    </section>
+
+    <section id="p3">
+        <div class="content">
+            <h1>02. AETHER TEE</h1>
+            <p>Smart-fiber mesh with holographic details.</p>
+        </div>
+    </section>
+
+    <section id="p4">
+        <div class="content">
+            <h1>03. THE FULL LOOK</h1>
+            <p>Combining the Alpha and Aether for the ultimate urban kit.</p>
+            <div class="btn">PRE-ORDER SET</div>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+        let scene, camera, renderer, shoe, shirt;
+        let scrollY = 0;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 1));
+            const pLight = new THREE.PointLight(0x00f2ff, 2);
+            pLight.position.set(5, 5, 5);
+            scene.add(pLight);
+
+            const loader = new THREE.GLTFLoader();
+            
+            loader.load('https://raw.githack.com/mrdoob/three.js/master/examples/models/gltf/MaterialsVariantsShoe/glTF/MaterialsVariantsShoe.gltf', (gltf) => {
+                shoe = gltf.scene;
+                shoe.scale.set(8, 8, 8);
+                scene.add(shoe);
+            });
+
+            loader.load('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF/SheenChair.gltf', (gltf) => {
+                shirt = gltf.scene;
+                shirt.scale.set(2.5, 2.5, 2.5);
+                scene.add(shirt);
+            });
+
+            camera.position.z = 6;
+            animate();
+        }
+
+        window.addEventListener('scroll', () => {
+            scrollY = window.scrollY;
+            
+            // Highlight nav items based on scroll
+            const links = document.querySelectorAll('nav a');
+            const sections = document.querySelectorAll('section');
+            sections.forEach((sec, i) => {
+                const top = sec.offsetTop - 100;
+                if (scrollY >= top) {
+                    links.forEach(l => l.classList.remove('active'));
+                    links[i].classList.add('active');
+                }
+            });
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const scrollPercent = scrollY / (document.body.scrollHeight - window.innerHeight);
+
+            // 3D MOVEMENT LOGIC
+            if(shoe) {
+                shoe.rotation.y += 0.01;
+                // Move shoe based on scroll
+                if (scrollPercent < 0.25) { shoe.position.set(2, 0, 0); }
+                else if (scrollPercent < 0.75) { shoe.position.y = 10; } // Hide
+                else { shoe.position.set(2, -1.5, 0); shoe.scale.set(4,4,4); } // Outfit pos
+            }
+
+            if(shirt) {
+                if (scrollPercent < 0.5) { shirt.position.y = -10; } // Hide
+                else if (scrollPercent < 0.75) { shirt.position.set(2, 0, 0); }
+                else { shirt.position.set(2, 1, 0); shirt.scale.set(1.8, 1.8, 1.8); } // Outfit pos
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
